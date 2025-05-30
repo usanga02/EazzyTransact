@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             String    @id @default(uuid())
+  email          String    @unique
+  wallets        Wallet[]
+  swapTransactions SwapTransaction[]
+  dailySwapTotal Float     @default(0)
+  lastSwapDate   DateTime?
+}
+
+model Wallet {
+  id       String   @id @default(uuid())
+  userId   String
+  currency String
+  balance  Float    @default(0)
+  user     User     @relation(fields: [userId], references: [id])
+}
+
+model ExchangeRate {
+  id           String   @id @default(uuid())
+  fromCurrency String
+  toCurrency   String
+  rate         Float
+  spread       Float
+  validUntil   DateTime
+  createdAt    DateTime @default(now())
+
+  @@index([fromCurrency, toCurrency])
+}
+
+model SwapTransaction {
+  id           String   @id @default(uuid())
+  userId       String
+  fromWalletId String
+  toWalletId   String
+  fromAmount   Float
+  toAmount     Float
+  rate         Float
+  fee          Float
+  status       String
+  createdAt    DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id])
+}
